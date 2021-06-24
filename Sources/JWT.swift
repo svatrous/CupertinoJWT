@@ -9,16 +9,20 @@
 import Foundation
 
 public struct JWT: Codable {
+    
     private struct Header: Codable {
         /// alg
         let algorithm: String = "ES256"
 
         /// kid
         let keyID: String
+        
+        let type: String = "JWT"
 
         enum CodingKeys: String, CodingKey {
             case algorithm = "alg"
             case keyID = "kid"
+            case type = "typ"
         }
     }
 
@@ -26,16 +30,16 @@ public struct JWT: Codable {
         /// iss
         public let teamID: String
 
-        /// iat
-        public let issueDate: Int
-
         /// exp
         public let expireDate: Int
+        
+        /// aud
+        public let audience: String
 
         enum CodingKeys: String, CodingKey {
             case teamID = "iss"
-            case issueDate = "iat"
             case expireDate = "exp"
+            case audience = "aud"
         }
     }
 
@@ -43,14 +47,11 @@ public struct JWT: Codable {
 
     private let payload: Payload
 
-    public init(keyID: String, teamID: String, issueDate: Date, expireDuration: TimeInterval) {
+    public init(keyID: String, teamID: String, audience: String, expireDuration: TimeInterval) {
 
         header = Header(keyID: keyID)
 
-        let iat = Int(issueDate.timeIntervalSince1970.rounded())
-        let exp = iat + Int(expireDuration)
-
-        payload = Payload(teamID: teamID, issueDate: iat, expireDate: exp)
+        payload = Payload(teamID: teamID, expireDate: Int(Date(timeIntervalSinceNow: 60*10).timeIntervalSince1970), audience: audience)
     }
 
     /// Combine header and payload as digest for signing.
